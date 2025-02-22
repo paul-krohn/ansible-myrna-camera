@@ -1,0 +1,100 @@
+---
+- name: Install packages
+  apt: name={{ item }} update_cache=yes state=latest
+  loop: [ "python3-virtualenv", "python3-pip", "ffmpeg", "prometheus-node-exporter" ]
+
+- name: video device metric script
+  template:
+    src: templates/camera-device-metric
+    dest: /usr/local/bin/camera-device-metric
+    owner: root
+    group: root
+    mode: '0755'
+- name: video device metric service
+  loop: "{{ myrna.cameras }}"
+  template:
+    src: templates/camera-device-metric.service
+    dest: /etc/systemd/system/camera-device-metric-{{ item.name }}.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - systemd daemon-reload
+- name: video device metric timer
+  loop: "{{ myrna.cameras }}"
+  template:
+    src: templates/camera-device-metric.timer
+    dest: /etc/systemd/system/camera-device-metric-{{ item.name }}.timer
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - systemd daemon-reload
+- name: enable camera device timer
+  ansible.builtin.systemd:
+    enabled: true
+    state: started
+    name: camera-device-metric-{{ item.name }}.timer
+  loop: "{{ myrna.cameras }}"
+- name: ffmpeg wrapper script
+  loop: "{{ myrna.cameras }}"
+  template:
+    src: templates/camera-start
+    dest: /usr/local/bin/camera-start-{{ item.name }}
+    owner: root
+    group: root
+    mode: '0755'
+- name: poster source
+#   become: yes
+# #   become_user: paul
+  git:
+    accept_hostkey: yes
+    dest: /data/source/myrna-poster
+    force: true
+    repo: git@github.com:paul-krohn/myrna-poster.git
+    version: instrumentation
+- name: poster venv/requirements
+  pip: 
+    requirements: /data/source/myrna-poster/requirements.txt
+    virtualenv: /data/venvs/myrna-poster
+
+- name: myrna-poster unit file
+  loop: "{{ myrna.cameras }}"
+  template:
+    src: templates/poster.service
+    dest: "/etc/systemd/system/poster-{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - systemd daemon-reload
+- name: enable myrna-poster for {{ item.name }}
+  loop: "{{ myrna.cameras }}"
+  ansible.builtin.systemd:
+    enabled: true
+    state: started
+    name: poster-{{ item.name }}.service
+- name: camera unit files
+  template:
+    src: templates/ffmpeg.service
+    dest: /etc/systemd/system/ffmpeg-{{ item.name }}.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - systemd daemon-reload
+  loop: "{{ myrna.cameras }}"
+- name: video device path file
+  template:
+    dest: /etc/systemd/system/ffmpeg-{{ item.name }}.path
+    src: templates/device.path
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ myrna.cameras }}"
+- name: enable but dont't start cameras
+  ansible.builtin.systemd:
+    enabled: false
+    # state: started  # running state is managed via homebridge
+    name: ffmpeg-{{ item.name }}.service
+  loop: "{{ myrna.cameras }}"

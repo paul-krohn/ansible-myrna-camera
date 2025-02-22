@@ -1,0 +1,10 @@
+[Unit] 
+Description = Myrna camera device presence metric {{ item.name }}
+
+[Service] 
+Type = simple
+User = root
+ExecStart = /usr/local/bin/camera-device-metric {{ item.name }} {{ item.pci_device }}
+
+[Install] 
+WantedBy= multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=myrna device metric {{ item.name }}
+
+[Timer]
+OnCalendar=*:0/1
+OnBootSec=10
+Unit=camera-device-metric-{{ item.name }}.service
+
+[Install]
+WantedBy=default.target

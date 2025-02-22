@@ -1,0 +1,14 @@
+[Unit]
+Description = 'myrna poster {{ item.name }}'
+Documentation = 'https://github.com/paul-krohn/myrna-poster'
+BindsTo = ffmpeg-{{ item.name }}.service
+
+[Service]
+Type=simple
+ExecStart = /data/venvs/myrna-poster/bin/python3 /data/source/myrna-poster/src/poster/watch.py --log-level info --api http://myrna.aspens.lan/myrna/ /mnt/hls/streams/{{ item.name }}
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

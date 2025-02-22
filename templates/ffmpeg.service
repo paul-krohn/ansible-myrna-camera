@@ -1,0 +1,15 @@
+[Unit]
+Description = 'myrna ffmpeg camera {{ item.name }}'
+Documentation = 'https://github.com/paul-krohn/myrna'
+Requires = poster-{{ item.name }}.service
+[Service]
+Type=simple
+ExecStart = /usr/local/bin/camera-start-{{ item.name }}
+# ffmpeg seems to exit after HUP/1 more gracefully than the default TERM/15
+KillSignal = 1
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+[Install]
+WantedBy=multi-user.target
+

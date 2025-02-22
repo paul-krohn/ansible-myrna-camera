@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+
+VIDEO_DEVICE=$(udevadm info {{ item.pci_device }} -q property | grep DEVNAME | cut -d = -f 2)
+
+mkdir -p /mnt/hls/streams/{{ item.name }}
+
+find /mnt/hls/streams/{{ item.name }} -name \*.ts -delete
+
+exec ffmpeg -hide_banner -loglevel warning -nostdin -input_format h264 -video_size 1920x1080 -probesize 64M \
+  -i "${VIDEO_DEVICE}" -strftime 1 -movflags frag_keyframe+empty_moov -hls_flags delete_segments+append_list \
+  -metadata service_name={{ item.name }} -f hls -segment_list_flags live -segment_time_delta 0.005 \
+  -force_key_frames 'expr:gte(t, n_forced * 2)' -framerate 60 -fps_mode cfr \
+  -hls_time 3 \
+  -hls_segment_type mpegts \
+  -hls_segment_filename /mnt/hls/streams/{{ item.name }}/%s.ts \
+  -vcodec copy \
+  /mnt/hls/streams/{{ item.name }}/index.m3u8

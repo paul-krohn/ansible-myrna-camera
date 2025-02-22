@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+
+CAMERA="${1}"
+DEVICE="${2}"
+PROMETHEUS_PATH="${3:-/var/lib/prometheus/node-exporter}"
+DEVICE_NAME=$(basename "$(readlink "${DEVICE}")")
+DEVICE_PRESENT=0
+if [[ -n "${DEVICE_NAME}" ]] ; then
+  DEVICE_PRESENT=1
+fi
+
+cat <<EOC > "${PROMETHEUS_PATH}/${CAMERA}.prom"
+# HELP myrna_camera_device_present whether the v4l device is present
+# TYPE myrna_camera_device_present gauge
+myrna_camera_device_present{camera="${CAMERA}",device="${DEVICE_NAME}"} ${DEVICE_PRESENT}
+EOC
