@@ -45,14 +45,12 @@
     group: root
     mode: '0755'
 - name: poster source
-#   become: yes
-# #   become_user: paul
   git:
     accept_hostkey: yes
     dest: /data/source/myrna-poster
     force: true
-    repo: git@github.com:paul-krohn/myrna-poster.git
-    version: instrumentation
+    repo: https://github.com/paul-krohn/myrna-poster.git
+    version: v0.2.0
 - name: poster venv/requirements
   pip: 
     requirements: /data/source/myrna-poster/requirements.txt
@@ -68,22 +66,22 @@
     mode: '0644'
   notify:
     - systemd daemon-reload
-- name: enable myrna-poster for {{ item.name }}
-  loop: "{{ myrna.cameras }}"
-  ansible.builtin.systemd:
-    enabled: true
-    state: started
-    name: poster-{{ item.name }}.service
 - name: camera unit files
+  loop: "{{ myrna.cameras }}"
   template:
     src: templates/ffmpeg.service
     dest: /etc/systemd/system/ffmpeg-{{ item.name }}.service
     owner: root
     group: root
     mode: '0644'
+- name: enable myrna-poster for {{ item.name }}
+  loop: "{{ myrna.cameras }}"
+  ansible.builtin.systemd:
+    enabled: true
+    state: started
+    name: poster-{{ item.name }}.service
   notify:
     - systemd daemon-reload
-  loop: "{{ myrna.cameras }}"
 - name: video device path file
   template:
     dest: /etc/systemd/system/ffmpeg-{{ item.name }}.path

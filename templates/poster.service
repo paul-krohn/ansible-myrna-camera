@@ -2,6 +2,8 @@
 Description = 'myrna poster {{ item.name }}'
 Documentation = 'https://github.com/paul-krohn/myrna-poster'
 BindsTo = ffmpeg-{{ item.name }}.service
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
