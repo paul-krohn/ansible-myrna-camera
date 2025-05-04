@@ -77,8 +77,7 @@
 - name: enable myrna-poster for {{ item.name }}
   loop: "{{ myrna.cameras }}"
   ansible.builtin.systemd:
-    enabled: true
-    state: started
+    enabled: false
     name: poster-{{ item.name }}.service
   notify:
     - systemd daemon-reload
