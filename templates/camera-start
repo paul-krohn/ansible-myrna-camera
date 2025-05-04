@@ -8,6 +8,12 @@ mkdir -p /mnt/hls/streams/{{ item.name }}
 
 find /mnt/hls/streams/{{ item.name }} -name \*.ts -delete
 
+{% if 'v4lctl' in item -%}
+{% for ctrl in item.v4lctl -%}
+v4l2-ctl -d ${VIDEO_DEVICE} --set-ctrl={{ ctrl }}
+{% endfor -%}
+{% endif -%}
+
 exec ffmpeg -hide_banner -loglevel warning -nostdin -input_format h264 -video_size 1920x1080 -probesize 64M \
   -i "${VIDEO_DEVICE}" -strftime 1 -movflags frag_keyframe+empty_moov -hls_flags delete_segments+append_list \
   -metadata service_name={{ item.name }} -f hls -segment_list_flags live -segment_time_delta 0.005 \
