@@ -82,14 +82,6 @@
     name: poster-{{ item.name }}.service
   notify:
     - systemd daemon-reload
-- name: video device path file
-  template:
-    dest: /etc/systemd/system/ffmpeg-{{ item.name }}.path
-    src: templates/device.path
-    owner: root
-    group: root
-    mode: '0644'
-  loop: "{{ myrna.cameras }}"
 - name: enable but dont't start cameras
   ansible.builtin.systemd:
     enabled: false
