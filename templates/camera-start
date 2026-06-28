@@ -14,6 +14,21 @@ v4l2-ctl -d ${VIDEO_DEVICE} --set-ctrl={{ ctrl }}
 {% endfor -%}
 {% endif -%}
 
+# Rename each segment immediately on creation so ffmpeg can't overwrite it when a
+# new segment opens in the same second. Linux rename() is atomic on open fds — the
+# fd ffmpeg holds keeps writing to the same inode under the new ms-precision name.
+(
+  inotifywait -m -q -e create --format '%f' /mnt/hls/streams/{{ item.name }} 2>/dev/null |
+  while IFS= read -r filename; do
+    [[ "$filename" =~ ^[0-9]+\.ts$ ]] || continue
+    ts_ms=$(date +%s%3N)
+    seconds="${ts_ms%???}"
+    ms="${ts_ms: -3}"
+    mv /mnt/hls/streams/{{ item.name }}/${filename} \
+       /mnt/hls/streams/{{ item.name }}/${seconds}.${ms}.ts 2>/dev/null || true
+  done
+) &
+
 exec ffmpeg -hide_banner -loglevel warning -nostdin -input_format h264 -video_size 1920x1080 -probesize 64M \
   -i "${VIDEO_DEVICE}" -strftime 1 -movflags frag_keyframe+empty_moov -hls_flags delete_segments+append_list \
   -metadata service_name={{ item.name }} -f hls -segment_list_flags live -segment_time_delta 0.005 \

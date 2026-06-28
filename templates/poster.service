@@ -7,7 +7,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart = /data/venvs/myrna-poster/bin/python3 /data/source/myrna-poster/src/poster/watch.py --log-level info --api http://myrna.aspens.lan/myrna/ /mnt/hls/streams/{{ item.name }}
+ExecStart = /data/venvs/myrna-poster/bin/python3 /data/source/myrna-poster/src/poster/watch.py --log-level debug --api {{ api_url }} /mnt/hls/streams/{{ item.name }}
 Restart=on-failure
 StandardOutput=journal
 StandardError=journal
