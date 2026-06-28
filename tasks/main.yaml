@@ -1,7 +1,7 @@
 ---
 - name: Install packages
   apt: name={{ item }} update_cache=yes state=latest
-  loop: [ "python3-virtualenv", "python3-pip", "ffmpeg", "prometheus-node-exporter" ]
+  loop: [ "python3-virtualenv", "python3-pip", "ffmpeg", "inotify-tools", "prometheus-node-exporter" ]
 
 - name: video device metric script
   template:
@@ -50,7 +50,7 @@
     dest: /data/source/myrna-poster
     force: true
     repo: https://github.com/paul-krohn/myrna-poster.git
-    version: v0.2.0
+    version: segments-milliseconds
 - name: poster venv/requirements
   pip: 
     requirements: /data/source/myrna-poster/requirements.txt
@@ -74,7 +74,9 @@
     owner: root
     group: root
     mode: '0644'
-- name: enable myrna-poster for {{ item.name }}
+  notify:
+    - systemd daemon-reload
+- name: enable myrna-poster
   loop: "{{ myrna.cameras }}"
   ansible.builtin.systemd:
     enabled: false
@@ -83,7 +85,7 @@
     - systemd daemon-reload
 - name: enable but dont't start cameras
   ansible.builtin.systemd:
-    enabled: false
-    # state: started  # running state is managed via homebridge
+    enabled: true
+    state: started  # running state is managed via homebridge
     name: ffmpeg-{{ item.name }}.service
   loop: "{{ myrna.cameras }}"
