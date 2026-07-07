@@ -2,6 +2,7 @@
 
 set -e
 
+export LIBVA_DRIVER_NAME=i965  # specific to the intel video card in the 6,1 mac mini in current use
 VIDEO_DEVICE=$(udevadm info {{ item.pci_device }} -q property | grep DEVNAME | cut -d = -f 2)
 
 mkdir -p /mnt/hls/streams/{{ item.name }}
@@ -29,12 +30,16 @@ v4l2-ctl -d ${VIDEO_DEVICE} --set-ctrl={{ ctrl }}
   done
 ) &
 
-exec ffmpeg -hide_banner -loglevel warning -nostdin -input_format h264 -video_size 1920x1080 -probesize 64M \
-  -i "${VIDEO_DEVICE}" -strftime 1 -movflags frag_keyframe+empty_moov -hls_flags delete_segments+append_list \
+exec ffmpeg -hide_banner -loglevel warning -nostdin \
+  -vaapi_device /dev/dri/renderD128 \
+  -input_format h264 -video_size 1920x1080 -probesize 64M \
+  -i "${VIDEO_DEVICE}" \
+  -vf 'format=nv12,hwupload' \
+  -vcodec h264_vaapi -g 30 \
+  -framerate 60 -fps_mode cfr \
+  -strftime 1 -hls_flags delete_segments+append_list \
   -metadata service_name={{ item.name }} -f hls -segment_list_flags live -segment_time_delta 0.005 \
-  -force_key_frames 'expr:gte(t, n_forced)' -framerate 60 -fps_mode cfr \
   -hls_time 0.5 \
   -hls_segment_type mpegts \
   -hls_segment_filename /mnt/hls/streams/{{ item.name }}/%s.ts \
-  -vcodec copy \
   /mnt/hls/streams/{{ item.name }}/index.m3u8
