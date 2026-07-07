@@ -2,4 +2,5 @@
 api_url: "http://myrna.aspens.lan/myrna/"
 cameras: []
 poster_log_level: warn
+poster_version: main
 

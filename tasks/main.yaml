@@ -50,7 +50,7 @@
     dest: /data/source/myrna-poster
     force: true
     repo: https://github.com/paul-krohn/myrna-poster.git
-    version: segments-milliseconds
+    version: "{{ poster_version }}"
 - name: poster venv/requirements
   pip: 
     requirements: /data/source/myrna-poster/requirements.txt

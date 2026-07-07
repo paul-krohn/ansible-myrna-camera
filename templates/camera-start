@@ -33,7 +33,7 @@ exec ffmpeg -hide_banner -loglevel warning -nostdin -input_format h264 -video_si
   -i "${VIDEO_DEVICE}" -strftime 1 -movflags frag_keyframe+empty_moov -hls_flags delete_segments+append_list \
   -metadata service_name={{ item.name }} -f hls -segment_list_flags live -segment_time_delta 0.005 \
   -force_key_frames 'expr:gte(t, n_forced)' -framerate 60 -fps_mode cfr \
-  -hls_time 1 \
+  -hls_time 0.5 \
   -hls_segment_type mpegts \
   -hls_segment_filename /mnt/hls/streams/{{ item.name }}/%s.ts \
   -vcodec copy \
