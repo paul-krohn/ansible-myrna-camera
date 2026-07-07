@@ -1,7 +1,7 @@
 ---
 - name: Install packages
   apt: name={{ item }} update_cache=yes state=latest
-  loop: [ "python3-virtualenv", "python3-pip", "ffmpeg", "inotify-tools", "prometheus-node-exporter" ]
+  loop: [ "python3-virtualenv", "python3-pip", "ffmpeg", "inotify-tools", "prometheus-node-exporter", "v4l-utils" ]
 
 - name: video device metric script
   template:
